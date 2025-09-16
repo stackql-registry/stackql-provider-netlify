@@ -4,10 +4,10 @@ See also:
 
 ## Installation
 
-To pull the latest version of the `REPLACEME` provider, run the following command:  
+To pull the latest version of the `netlify` provider, run the following command:  
 
 ```bash
-REGISTRY PULL REPLACEME;
+REGISTRY PULL netlify;
 ```
 > To view previous provider versions or to pull a specific provider version, see [here](https://stackql.io/docs/language-spec/registry).  
 
@@ -15,7 +15,7 @@ REGISTRY PULL REPLACEME;
 
 The following system environment variables are used for authentication by default:  
 
-- <CopyableCode code="REPLACEME" /> - REPLACEME API token (see <a href="REPLACEME>How to Create a Personal Access Token</a>)
+- <CopyableCode code="NETLIFY_AUTH_TOKEN" /> - Netlify API token (see <a href="https://docs.netlify.com/api/get-started/#authentication">How to Create a Netlify API Token</a>)
   
 These variables are sourced at runtime (from the local machine or as CI variables/secrets).  
 
@@ -27,7 +27,7 @@ To use different environment variables (instead of the defaults), use the `--aut
 
 ```bash
 
-AUTH='{ "REPLACEME": { "type": "bearer",  "credentialsenvvar": "REPLACEME" }}'
+AUTH='{ "netlify": { "type": "bearer",  "credentialsenvvar": "YOUR_NETLIFY_AUTH_TOKEN_VAR" }}'
 stackql shell --auth="${AUTH}"
 
 ```
@@ -35,7 +35,7 @@ or using PowerShell:
 
 ```powershell
 
-$Auth = "{ 'REPLACEME': { 'type': 'bearer',  'credentialsenvvar': 'REPLACEME' }}"
+$Auth = "{ 'netlify': { 'type': 'bearer',  'credentialsenvvar': 'YOUR_NETLIFY_AUTH_TOKEN_VAR' }}"
 stackql.exe shell --auth=$Auth
 
 ```
