@@ -8,12 +8,15 @@ keywords:
   - infrastructure-as-code
   - configuration-as-data
   - cloud inventory
-description: Query, deploy and manage Netlify resources using SQL
+  - jamstack
+  - deploys
+  - dns
+description: Query, deploy and manage Netlify sites, deploys, builds, environment variables, DNS zones, forms, functions and teams using SQL
 custom_edit_url: null
-image: /img/providers/netlify/stackql-netlify-provider-featured-image.png
+image: /img/stackql-netlify-provider-featured-image.png
 id: 'provider-intro'
 ---
 
 import CopyableCode from '@site/src/components/CopyableCode/CopyableCode';
 
-Web development and content distribution platform.
+Query, provision and operate Netlify using SQL - sites and their build, domain and SSL settings, deploys and deploy keys, builds and build hooks, environment variables, DNS zones and records, serverless functions, forms and submissions, outgoing webhooks, teams and members, add-on services, split tests, dev servers, agent runners, the AI gateway and Netlify DB.

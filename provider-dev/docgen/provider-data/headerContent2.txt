@@ -1,42 +1,323 @@
-See also:   
+See also:
 [[` SHOW `]](https://stackql.io/docs/language-spec/show) [[` DESCRIBE `]](https://stackql.io/docs/language-spec/describe)  [[` REGISTRY `]](https://stackql.io/docs/language-spec/registry)
-* * * 
+* * *
 
 ## Installation
 
-To pull the latest version of the `netlify` provider, run the following command:  
+To pull the latest version of the `netlify` provider, run the following command:
 
 ```bash
 REGISTRY PULL netlify;
 ```
-> To view previous provider versions or to pull a specific provider version, see [here](https://stackql.io/docs/language-spec/registry).  
+> To view previous provider versions or to pull a specific provider version, see [here](https://stackql.io/docs/language-spec/registry).
 
 ## Authentication
 
-The following system environment variables are used for authentication by default:  
+The following system environment variables are used for authentication by default:
 
-- <CopyableCode code="NETLIFY_AUTH_TOKEN" /> - Netlify API token (see <a href="https://docs.netlify.com/api/get-started/#authentication">How to Create a Netlify API Token</a>)
-  
-These variables are sourced at runtime (from the local machine or as CI variables/secrets).  
+- <CopyableCode code="NETLIFY_API_TOKEN" /> - Netlify personal access token (see <a href="https://docs.netlify.com/api/get-started/#authentication">Netlify API authentication</a>; create one under <b>User settings > Applications > Personal access tokens</b>)
+
+This is the same variable the official Netlify Terraform provider reads. It is sourced at runtime (from the local machine or as a CI variable/secret).
 
 <details>
 
 <summary>Using different environment variables</summary>
 
-To use different environment variables (instead of the defaults), use the `--auth` flag of the `stackql` program.  For example:  
+To use different environment variables (instead of the defaults), use the `--auth` flag of the `stackql` program.  For example:
 
 ```bash
 
-AUTH='{ "netlify": { "type": "bearer",  "credentialsenvvar": "YOUR_NETLIFY_AUTH_TOKEN_VAR" }}'
+AUTH='{ "netlify": { "type": "bearer",  "credentialsenvvar": "YOUR_NETLIFY_TOKEN_VAR" }}'
 stackql shell --auth="${AUTH}"
 
 ```
-or using PowerShell:  
+or using PowerShell:
 
 ```powershell
 
-$Auth = "{ 'netlify': { 'type': 'bearer',  'credentialsenvvar': 'YOUR_NETLIFY_AUTH_TOKEN_VAR' }}"
+$Auth = "{ 'netlify': { 'type': 'bearer',  'credentialsenvvar': 'YOUR_NETLIFY_TOKEN_VAR' }}"
 stackql.exe shell --auth=$Auth
 
 ```
 </details>
+
+### Using the netlify provider with agent assistants (MCP)
+
+StackQL ships an MCP server (`stackql mcp`), so agent assistants such as Claude Code, Claude Desktop, Codex and other MCP clients can query and manage Netlify with SQL.
+
+Store the token in a dotenv file that the server sources at startup:
+
+```bash
+mkdir -p ~/.stackql
+echo "NETLIFY_API_TOKEN=<your-personal-access-token>" > ~/.stackql/netlify.env
+```
+
+Then register the server with your MCP client. For Claude Code:
+
+```bash
+claude mcp add stackql -- stackql mcp --env.file="$HOME/.stackql/netlify.env"
+```
+
+For Claude Desktop (`claude_desktop_config.json`) or any client configured with JSON:
+
+```json
+{
+  "mcpServers": {
+    "stackql": {
+      "command": "stackql",
+      "args": ["mcp", "--env.file=/path/to/.stackql/netlify.env"]
+    }
+  }
+}
+```
+
+The agent can then discover and query Netlify using the server's tools (`list_resources`, `describe_resource`, `run_select_query` and so on). Credential values are resolved inside the server process and are never visible to the agent.
+
+## Sites
+
+Every site the token can see, with the team it belongs to:
+
+```sql
+SELECT
+  id,
+  name,
+  url,
+  account_slug,
+  state,
+  custom_domain,
+  created_at
+FROM netlify.sites.sites
+ORDER BY created_at DESC;
+```
+
+Sites in one team, filtered by name (both are sent to the API as request parameters):
+
+```sql
+SELECT id, name, url
+FROM netlify.sites.sites
+WHERE account_slug = 'my-team' AND name = 'blog';
+```
+
+A single site with its build settings expanded from the nested JSON:
+
+```sql
+SELECT
+  name,
+  custom_domain,
+  json_extract(build_settings, '$.repo_url') AS repo_url,
+  json_extract(build_settings, '$.repo_branch') AS repo_branch,
+  json_extract(build_settings, '$.cmd') AS build_command,
+  json_extract(build_settings, '$.dir') AS publish_directory
+FROM netlify.sites.sites
+WHERE site_id = '1798369c-fb66-438b-b80d-a19ce1698772';
+```
+
+The SSL certificate provisioned for a site:
+
+```sql
+SELECT domains, state, expires_at
+FROM netlify.sites.ssl_certificates
+WHERE site_id = '1798369c-fb66-438b-b80d-a19ce1698772';
+```
+
+## Deploys and builds
+
+Deploys are listed per site. Netlify paginates with a `Link` header and the provider follows it automatically, so a listing returns every page; `state`, `branch`, `production` and `per_page` are sent to the API when supplied:
+
+```sql
+SELECT id, state, branch, context, published_at
+FROM netlify.deploys.deploys
+WHERE site_id = '1798369c-fb66-438b-b80d-a19ce1698772'
+AND state = 'ready'
+ORDER BY published_at DESC;
+```
+
+Deploy duration and success rate by branch, computed locally over the results:
+
+```sql
+SELECT
+  branch,
+  COUNT(*) AS deploys,
+  SUM(state = 'ready') AS succeeded,
+  ROUND(100.0 * SUM(state = 'ready') / COUNT(*), 1) AS success_pct
+FROM netlify.deploys.deploys
+WHERE site_id = '1798369c-fb66-438b-b80d-a19ce1698772'
+GROUP BY branch;
+```
+
+A deploy by id (no site required), and the builds for a site:
+
+```sql
+SELECT id, state, site_id, deploy_url, commit_ref
+FROM netlify.deploys.deploys
+WHERE deploy_id = '6a3b1220ef9804c0f88b7bb6';
+
+SELECT id, deploy_id, done, error, created_at
+FROM netlify.builds.builds
+WHERE site_id = '1798369c-fb66-438b-b80d-a19ce1698772';
+```
+
+Build hooks (the URLs that trigger a build when POSTed to):
+
+```sql
+SELECT id, title, branch, url
+FROM netlify.builds.build_hooks
+WHERE site_id = '1798369c-fb66-438b-b80d-a19ce1698772';
+```
+
+## Environment variables
+
+Environment variables are scoped to a team (`account_id`) and optionally a site. The context values come back in the `env_values` column (the API field is `values`, renamed because it is a SQL keyword):
+
+```sql
+SELECT key, scopes, is_secret, env_values
+FROM netlify.env.env_vars
+WHERE account_id = '60612a0f5d5dcb19a6e9a8ab'
+AND site_id = '1798369c-fb66-438b-b80d-a19ce1698772';
+```
+
+One row per variable and deploy context, expanding `env_values` with `json_each`:
+
+```sql
+SELECT
+  e.key,
+  json_extract(v.value, '$.context') AS context,
+  json_extract(v.value, '$.value') AS value
+FROM netlify.env.env_vars e, json_each(e.env_values) v
+WHERE e.account_id = '60612a0f5d5dcb19a6e9a8ab'
+AND e.site_id = '1798369c-fb66-438b-b80d-a19ce1698772'
+ORDER BY e.key, context;
+```
+
+## DNS
+
+Zones managed by Netlify DNS and the records in one of them:
+
+```sql
+SELECT id, name, account_slug, dns_servers
+FROM netlify.dns.dns_zones;
+
+SELECT hostname, type, value, ttl, priority
+FROM netlify.dns.dns_records
+WHERE zone_id = '6a3b13ddc32b40c74188b36e';
+```
+
+All records across every zone, resolved from each zone row (one request per zone):
+
+```sql
+SELECT z.name AS zone, r.hostname, r.type, r.value, r.ttl
+FROM netlify.dns.dns_zones z
+JOIN netlify.dns.dns_records r ON r.zone_id = z.id
+ORDER BY zone, r.hostname;
+```
+
+## Teams, members and audit
+
+```sql
+SELECT id, name, slug, type_name
+FROM netlify.accounts.accounts;
+
+SELECT id, full_name, email, role
+FROM netlify.accounts.members
+WHERE account_slug = 'my-team';
+
+SELECT id, json_extract(payload, '$.action') AS action, json_extract(payload, '$.actor_name') AS actor
+FROM netlify.accounts.audit_events
+WHERE account_id = '60612a0f5d5dcb19a6e9a8ab';
+```
+
+## Forms, functions and hooks
+
+```sql
+SELECT id, name, submission_count
+FROM netlify.forms.forms
+WHERE site_id = '1798369c-fb66-438b-b80d-a19ce1698772';
+
+SELECT id, form_name, email, created_at
+FROM netlify.forms.submissions
+WHERE site_id = '1798369c-fb66-438b-b80d-a19ce1698772';
+
+SELECT id, branch, provider, functions
+FROM netlify.functions.functions
+WHERE site_id = '1798369c-fb66-438b-b80d-a19ce1698772';
+
+SELECT id, type, event, disabled
+FROM netlify.hooks.hooks
+WHERE site_id = '1798369c-fb66-438b-b80d-a19ce1698772';
+```
+
+## Provision, mutate and tear down
+
+Mutations use the same SQL grammar: `INSERT` creates, `UPDATE` sends a PATCH, `REPLACE` sends a PUT, `EXEC` invokes lifecycle methods and `DELETE` removes. Request body fields are supplied as columns using their API names.
+
+Create a site in a team, change its build settings, then delete it:
+
+```sql
+INSERT INTO netlify.sites.sites (account_slug, name)
+SELECT 'my-team', 'stackql-example';
+
+UPDATE netlify.sites.sites
+SET build_settings = '{"cmd": "npm run build", "dir": "dist"}'
+WHERE site_id = '<site-id>';
+
+DELETE FROM netlify.sites.sites
+WHERE site_id = '<site-id>';
+```
+
+Environment variables end to end. The create endpoint takes an array, supplied in the `env_vars` column; `UPDATE` sets one context value (PATCH); `REPLACE` rewrites the whole variable (PUT) - the API needs the key in the body as well as the path, so it is given as `env_key`, with the values in `env_values`:
+
+```sql
+-- create
+INSERT INTO netlify.env.env_vars (account_id, site_id, env_vars)
+SELECT '60612a0f5d5dcb19a6e9a8ab', '1798369c-fb66-438b-b80d-a19ce1698772',
+  '[{"key": "API_URL", "values": [{"value": "https://api.example.com", "context": "all"}]}]';
+
+-- set a single context value
+UPDATE netlify.env.env_vars
+SET context = 'deploy-preview', value = 'https://staging.example.com'
+WHERE account_id = '60612a0f5d5dcb19a6e9a8ab'
+AND site_id = '1798369c-fb66-438b-b80d-a19ce1698772'
+AND key = 'API_URL';
+
+-- replace the whole variable
+REPLACE netlify.env.env_vars
+SET env_key = 'API_URL', env_values = '[{"value": "https://api.example.com", "context": "production"}]'
+WHERE account_id = '60612a0f5d5dcb19a6e9a8ab'
+AND site_id = '1798369c-fb66-438b-b80d-a19ce1698772'
+AND key = 'API_URL';
+
+-- delete
+DELETE FROM netlify.env.env_vars
+WHERE account_id = '60612a0f5d5dcb19a6e9a8ab'
+AND site_id = '1798369c-fb66-438b-b80d-a19ce1698772'
+AND key = 'API_URL';
+```
+
+DNS records and build hooks:
+
+```sql
+INSERT INTO netlify.dns.dns_records (zone_id, type, hostname, value, ttl)
+SELECT '6a3b13ddc32b40c74188b36e', 'TXT', 'example.sqlpedia.org', 'stackql', 3600;
+
+INSERT INTO netlify.builds.build_hooks (site_id, title, branch)
+SELECT '1798369c-fb66-438b-b80d-a19ce1698772', 'Nightly rebuild', 'main';
+```
+
+Lifecycle operations are `EXEC` methods on the resource they act on:
+
+```sql
+-- purge the CDN cache for a site
+EXEC netlify.sites.sites.purge_cache @@json = '{"site_id": "1798369c-fb66-438b-b80d-a19ce1698772"}';
+
+-- lock the published deploy (and unlock it again)
+EXEC netlify.deploys.deploys.lock @deploy_id = '6a3b1220ef9804c0f88b7bb6';
+EXEC netlify.deploys.deploys.unlock @deploy_id = '6a3b1220ef9804c0f88b7bb6';
+
+-- roll a site back to its previous deploy
+EXEC netlify.deploys.deploys.rollback @site_id = '1798369c-fb66-438b-b80d-a19ce1698772';
+
+-- trigger a build hook
+EXEC netlify.builds.builds.notify_start @build_id = '<build-id>';
+```
+
+`SHOW METHODS IN netlify.deploys.deploys` lists every method a resource exposes, including the `EXEC`-only ones, with their required parameters.

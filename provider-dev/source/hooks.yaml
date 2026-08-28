@@ -1,0 +1,360 @@
+openapi: 3.0.0
+info:
+  title: hooks API
+  description: netlify hooks API
+  version: 2.57.0
+paths:
+  /hooks:
+    get:
+      operationId: listHooksBySiteId
+      tags:
+        - hook
+      parameters:
+        - name: site_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    site_id:
+                      type: string
+                    type:
+                      type: string
+                    event:
+                      type: string
+                    data:
+                      type: string
+                      description: (opaque JSON object)
+                    created_at:
+                      type: string
+                      format: dateTime
+                    updated_at:
+                      type: string
+                      format: dateTime
+                    disabled:
+                      type: boolean
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+    post:
+      operationId: createHookBySiteId
+      tags:
+        - hook
+      parameters:
+        - name: site_id
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        $ref: '#/components/requestBodies/createHookBySiteIdHook'
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  site_id:
+                    type: string
+                  type:
+                    type: string
+                  event:
+                    type: string
+                  data:
+                    type: string
+                    description: (opaque JSON object)
+                  created_at:
+                    type: string
+                    format: dateTime
+                  updated_at:
+                    type: string
+                    format: dateTime
+                  disabled:
+                    type: boolean
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+  /hooks/{hook_id}:
+    get:
+      operationId: getHook
+      tags:
+        - hook
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  site_id:
+                    type: string
+                  type:
+                    type: string
+                  event:
+                    type: string
+                  data:
+                    type: string
+                    description: (opaque JSON object)
+                  created_at:
+                    type: string
+                    format: dateTime
+                  updated_at:
+                    type: string
+                    format: dateTime
+                  disabled:
+                    type: boolean
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+      parameters:
+        - name: hook_id
+          in: path
+          required: true
+          schema:
+            type: string
+    put:
+      operationId: updateHook
+      tags:
+        - hook
+      requestBody:
+        $ref: '#/components/requestBodies/createHookBySiteIdHook'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  site_id:
+                    type: string
+                  type:
+                    type: string
+                  event:
+                    type: string
+                  data:
+                    type: string
+                    description: (opaque JSON object)
+                  created_at:
+                    type: string
+                    format: dateTime
+                  updated_at:
+                    type: string
+                    format: dateTime
+                  disabled:
+                    type: boolean
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+      parameters:
+        - name: hook_id
+          in: path
+          required: true
+          schema:
+            type: string
+    delete:
+      operationId: deleteHook
+      tags:
+        - hook
+      responses:
+        '204':
+          description: No content
+      parameters:
+        - name: hook_id
+          in: path
+          required: true
+          schema:
+            type: string
+  /hooks/{hook_id}/enable:
+    post:
+      operationId: enableHook
+      tags:
+        - hook
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  site_id:
+                    type: string
+                  type:
+                    type: string
+                  event:
+                    type: string
+                  data:
+                    type: string
+                    description: (opaque JSON object)
+                  created_at:
+                    type: string
+                    format: dateTime
+                  updated_at:
+                    type: string
+                    format: dateTime
+                  disabled:
+                    type: boolean
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+      parameters:
+        - name: hook_id
+          in: path
+          required: true
+          schema:
+            type: string
+  /hooks/types:
+    get:
+      operationId: listHookTypes
+      tags:
+        - hookType
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    events:
+                      type: array
+                      items:
+                        type: string
+                    fields:
+                      type: array
+                      items:
+                        type: string
+                        description: (opaque JSON object)
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+components:
+  requestBodies:
+    createHookBySiteIdHook:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+              site_id:
+                type: string
+              type:
+                type: string
+              event:
+                type: string
+              data:
+                type: string
+                description: (opaque JSON object)
+              created_at:
+                type: string
+                format: dateTime
+              updated_at:
+                type: string
+                format: dateTime
+              disabled:
+                type: boolean
+      required: true
+  schemas: {}
+servers:
+  - url: https://api.netlify.com/api/v1

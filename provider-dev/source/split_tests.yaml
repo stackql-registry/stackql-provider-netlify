@@ -1,0 +1,335 @@
+openapi: 3.0.0
+info:
+  title: split_tests API
+  description: netlify split_tests API
+  version: 2.57.0
+paths:
+  /sites/{site_id}/traffic_splits:
+    post:
+      operationId: createSplitTest
+      tags:
+        - splitTest
+      requestBody:
+        $ref: '#/components/requestBodies/createSplitTestBranchTests'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  site_id:
+                    type: string
+                  name:
+                    type: string
+                  path:
+                    type: string
+                  branches:
+                    type: array
+                    items:
+                      type: string
+                      description: (opaque JSON object)
+                  active:
+                    type: boolean
+                  created_at:
+                    type: string
+                    format: dateTime
+                  updated_at:
+                    type: string
+                    format: dateTime
+                  unpublished_at:
+                    type: string
+                    format: dateTime
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+      parameters:
+        - name: site_id
+          in: path
+          required: true
+          schema:
+            type: string
+    get:
+      operationId: getSplitTests
+      tags:
+        - splitTest
+      responses:
+        '200':
+          description: split_tests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    site_id:
+                      type: string
+                    name:
+                      type: string
+                    path:
+                      type: string
+                    branches:
+                      type: array
+                      items:
+                        type: string
+                        description: (opaque JSON object)
+                    active:
+                      type: boolean
+                    created_at:
+                      type: string
+                      format: dateTime
+                    updated_at:
+                      type: string
+                      format: dateTime
+                    unpublished_at:
+                      type: string
+                      format: dateTime
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+      parameters:
+        - name: site_id
+          in: path
+          required: true
+          schema:
+            type: string
+  /sites/{site_id}/traffic_splits/{split_test_id}:
+    put:
+      operationId: updateSplitTest
+      tags:
+        - splitTest
+      requestBody:
+        $ref: '#/components/requestBodies/createSplitTestBranchTests'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  site_id:
+                    type: string
+                  name:
+                    type: string
+                  path:
+                    type: string
+                  branches:
+                    type: array
+                    items:
+                      type: string
+                      description: (opaque JSON object)
+                  active:
+                    type: boolean
+                  created_at:
+                    type: string
+                    format: dateTime
+                  updated_at:
+                    type: string
+                    format: dateTime
+                  unpublished_at:
+                    type: string
+                    format: dateTime
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+      parameters:
+        - name: site_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: split_test_id
+          in: path
+          required: true
+          schema:
+            type: string
+    get:
+      operationId: getSplitTest
+      tags:
+        - splitTest
+      responses:
+        '200':
+          description: split_test
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  site_id:
+                    type: string
+                  name:
+                    type: string
+                  path:
+                    type: string
+                  branches:
+                    type: array
+                    items:
+                      type: string
+                      description: (opaque JSON object)
+                  active:
+                    type: boolean
+                  created_at:
+                    type: string
+                    format: dateTime
+                  updated_at:
+                    type: string
+                    format: dateTime
+                  unpublished_at:
+                    type: string
+                    format: dateTime
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+      parameters:
+        - name: site_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: split_test_id
+          in: path
+          required: true
+          schema:
+            type: string
+  /sites/{site_id}/traffic_splits/{split_test_id}/publish:
+    post:
+      operationId: enableSplitTest
+      tags:
+        - splitTest
+      responses:
+        '204':
+          description: enable
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+      parameters:
+        - name: site_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: split_test_id
+          in: path
+          required: true
+          schema:
+            type: string
+  /sites/{site_id}/traffic_splits/{split_test_id}/unpublish:
+    post:
+      operationId: disableSplitTest
+      tags:
+        - splitTest
+      responses:
+        '204':
+          description: disabled
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+      parameters:
+        - name: site_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: split_test_id
+          in: path
+          required: true
+          schema:
+            type: string
+components:
+  requestBodies:
+    createSplitTestBranchTests:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              branch_tests:
+                type: string
+                description: (opaque JSON object)
+      required: true
+  schemas: {}
+servers:
+  - url: https://api.netlify.com/api/v1
