@@ -1,0 +1,30 @@
+# Per-provider settings consumed by conftest.py.
+# This file is the only piece (besides tier1.yaml) that should differ between
+# providers when reusing this test framework as an archetype.
+
+provider_name: netlify
+
+# Registry root - path relative to the repo root that contains src/<provider>/...
+# (ignored with --live, which uses the public registry)
+registry_root: provider-dev/openapi
+
+# Auth env vars that MUST be set for tier 1 tests to run.
+# If any are missing, the test session fails fast with a clear message.
+required_env:
+  - NETLIFY_API_TOKEN
+
+# Optional env vars used inside tier1.yaml ${VAR} substitutions.
+# Defaults are applied if the env var is not set.
+test_env_defaults:
+  TEST_ACCOUNT_SLUG: jeffreyaven     # team slug that owns the test site
+  TEST_SITE_NAME: sqlpedia           # a site in that team (reads + the env var lifecycle)
+  TEST_ENV_KEY: STACKQL_SMOKE_TEST   # disposable env var created and deleted by the suite
+
+# Environment-specific ids resolved by query at session start (each query must
+# return one row; its first column is the value). Set the variable in the
+# environment to skip the lookup.
+derived_env:
+  TEST_SITE_ID: "SELECT id FROM netlify.sites.sites WHERE account_slug = '${TEST_ACCOUNT_SLUG}' AND name = '${TEST_SITE_NAME}'"
+  TEST_ACCOUNT_ID: "SELECT id FROM netlify.accounts.accounts WHERE slug = '${TEST_ACCOUNT_SLUG}'"
+  TEST_DNS_ZONE_ID: "SELECT id FROM netlify.dns.dns_zones WHERE account_slug = '${TEST_ACCOUNT_SLUG}'"
+  TEST_DEPLOY_ID: "SELECT id FROM netlify.deploys.deploys WHERE site_id = '${TEST_SITE_ID}' AND state = 'ready' AND per_page = 1"

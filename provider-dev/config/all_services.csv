@@ -1,0 +1,196 @@
+filename,path,operationId,formatted_op_id,verb,response_object,tags,formatted_tags,stackql_resource_name,stackql_method_name,stackql_verb,stackql_object_key,op_description
+accounts.yaml,/{account_slug}/members,listMembersForAccount,list_members_for_account,get,,member,member,members,list,select,,
+accounts.yaml,/{account_slug}/members,addMemberToAccount,add_member_to_account,post,,member,member,members,add,insert,,
+accounts.yaml,/{account_slug}/members/{member_id},getAccountMember,get_account_member,get,,member,member,members,get,select,,
+accounts.yaml,/{account_slug}/members/{member_id},updateAccountMember,update_account_member,put,,member,member,members,update,replace,,
+accounts.yaml,/{account_slug}/members/{member_id},removeAccountMember,remove_account_member,delete,,member,member,members,remove,delete,,
+accounts.yaml,/billing/payment_methods,listPaymentMethodsForUser,list_payment_methods_for_user,get,,paymentMethod,payment_method,payment_methods,list,select,,
+accounts.yaml,/accounts/types,listAccountTypesForUser,list_account_types_for_user,get,,accountType,account_type,account_types,list,select,,
+accounts.yaml,/accounts,listAccountsForUser,list_accounts_for_user,get,,accountMembership,account_membership,accounts,list,select,,
+accounts.yaml,/accounts,createAccount,create_account,post,,accountMembership,account_membership,accounts,create,insert,,
+accounts.yaml,/accounts/{account_id},getAccount,get_account,get,,accountMembership,account_membership,accounts,get,select,,
+accounts.yaml,/accounts/{account_id},updateAccount,update_account,put,,accountMembership,account_membership,accounts,update,replace,,
+accounts.yaml,/accounts/{account_id},cancelAccount,cancel_account,delete,,accountMembership,account_membership,accounts,cancel,delete,,
+accounts.yaml,/accounts/{account_id}/audit,listAccountAuditEvents,list_account_audit_events,get,,auditLog,audit_log,audit_events,list,select,,
+agent_runners.yaml,/agent_runners,listAgentRunners,list_agent_runners,get,,agentRunner,agent_runner,agent_runners,list,select,,
+agent_runners.yaml,/agent_runners,createAgentRunner,create_agent_runner,post,,agentRunner,agent_runner,agent_runners,create,insert,,
+agent_runners.yaml,/agent_runners/upload_url,createAgentRunnerUploadUrl,create_agent_runner_upload_url,post,,agentRunner,agent_runner,agent_runners,create_upload_url,exec,,
+agent_runners.yaml,/agent_runners/{agent_runner_id},getAgentRunner,get_agent_runner,get,,agentRunner,agent_runner,agent_runners,get,select,,
+agent_runners.yaml,/agent_runners/{agent_runner_id},updateAgentRunner,update_agent_runner,patch,,agentRunner,agent_runner,agent_runners,update,update,,
+agent_runners.yaml,/agent_runners/{agent_runner_id},deleteAgentRunner,delete_agent_runner,delete,,agentRunner,agent_runner,agent_runners,delete,delete,,
+agent_runners.yaml,/agent_runners/{agent_runner_id}/archive,archiveAgentRunner,archive_agent_runner,post,,agentRunner,agent_runner,agent_runners,archive,exec,,
+agent_runners.yaml,/agent_runners/{agent_runner_id}/pull_request,agentRunnerPullRequest,agent_runner_pull_request,post,,agentRunner,agent_runner,agent_runners,create_pull_request,exec,,
+agent_runners.yaml,/agent_runners/{agent_runner_id}/commit,agentRunnerCommitToBranch,agent_runner_commit_to_branch,post,,agentRunner,agent_runner,agent_runners,commit_to_branch,exec,,
+agent_runners.yaml,/agent_runners/{agent_runner_id}/sessions,listAgentRunnerSessions,list_agent_runner_sessions,get,,agentRunnerSession,agent_runner_session,agent_runner_sessions,list,select,,
+agent_runners.yaml,/agent_runners/{agent_runner_id}/sessions,createAgentRunnerSession,create_agent_runner_session,post,,agentRunnerSession,agent_runner_session,agent_runner_sessions,create,insert,,
+agent_runners.yaml,/agent_runners/{agent_runner_id}/sessions/{agent_runner_session_id},getAgentRunnerSession,get_agent_runner_session,get,,agentRunnerSession,agent_runner_session,agent_runner_sessions,get,select,,
+agent_runners.yaml,/agent_runners/{agent_runner_id}/sessions/{agent_runner_session_id},updateAgentRunnerSession,update_agent_runner_session,patch,,agentRunnerSession,agent_runner_session,agent_runner_sessions,update,update,,
+agent_runners.yaml,/agent_runners/{agent_runner_id}/sessions/{agent_runner_session_id},deleteAgentRunnerSession,delete_agent_runner_session,delete,,agentRunnerSession,agent_runner_session,agent_runner_sessions,delete,delete,,
+agent_runners.yaml,/sites/{site_id}/agent_runner_hooks,listSiteAgentRunnerHooks,list_site_agent_runner_hooks,get,,agentRunnerHook,agent_runner_hook,agent_runner_hooks,list,select,,
+agent_runners.yaml,/sites/{site_id}/agent_runner_hooks,createSiteAgentRunnerHook,create_site_agent_runner_hook,post,,agentRunnerHook,agent_runner_hook,agent_runner_hooks,create,insert,,
+agent_runners.yaml,/sites/{site_id}/agent_runner_hooks/{id},getSiteAgentRunnerHook,get_site_agent_runner_hook,get,,agentRunnerHook,agent_runner_hook,agent_runner_hooks,get,select,,
+agent_runners.yaml,/sites/{site_id}/agent_runner_hooks/{id},updateSiteAgentRunnerHook,update_site_agent_runner_hook,put,,agentRunnerHook,agent_runner_hook,agent_runner_hooks,update,replace,,
+agent_runners.yaml,/sites/{site_id}/agent_runner_hooks/{id},deleteSiteAgentRunnerHook,delete_site_agent_runner_hook,delete,,agentRunnerHook,agent_runner_hook,agent_runner_hooks,delete,delete,,
+ai_gateway.yaml,/ai-gateway/providers,getAIGatewayProviders,get_aigateway_providers,get,,aiGateway,ai_gateway,providers,get,select,,
+ai_gateway.yaml,/sites/{site_id}/ai-gateway/token,getAIGatewayToken,get_aigateway_token,get,,aiGateway,ai_gateway,tokens,get_for_site,select,,Returns an AI Gateway token for a specific site
+ai_gateway.yaml,/accounts/{account_id}/ai-gateway/token,getAccountAIGatewayToken,get_account_aigateway_token,get,,aiGateway,ai_gateway,tokens,get_for_account,select,,Returns an AI Gateway token scoped to an account
+builds.yaml,/sites/{site_id}/build_hooks,listSiteBuildHooks,list_site_build_hooks,get,,buildHook,build_hook,build_hooks,list,select,,
+builds.yaml,/sites/{site_id}/build_hooks,createSiteBuildHook,create_site_build_hook,post,,buildHook,build_hook,build_hooks,create,insert,,
+builds.yaml,/sites/{site_id}/build_hooks/{id},getSiteBuildHook,get_site_build_hook,get,,buildHook,build_hook,build_hooks,get,select,,
+builds.yaml,/sites/{site_id}/build_hooks/{id},updateSiteBuildHook,update_site_build_hook,put,,buildHook,build_hook,build_hooks,update,replace,,
+builds.yaml,/sites/{site_id}/build_hooks/{id},deleteSiteBuildHook,delete_site_build_hook,delete,,buildHook,build_hook,build_hooks,delete,delete,,
+builds.yaml,/sites/{site_id}/builds,listSiteBuilds,list_site_builds,get,,build,build,builds,list,select,,
+builds.yaml,/sites/{site_id}/builds,createSiteBuild,create_site_build,post,,build,build,builds,create,insert,,"Runs a build for a site. The build will be scheduled to run at the first opportunity, but it might not start immediately if insufficient account build capacity is available.
+
+Files for build can be uploaded as a zipped site using one of these methods:
+1. Set Content-Type to 'application/zip' and send the zip file as the raw request body
+2. Set Content-Type to 'multipart/form-data' and include the zip file in the 'zip' field
+"
+builds.yaml,/builds/{build_id},getSiteBuild,get_site_build,get,,build,build,builds,get,select,,
+builds.yaml,/builds/{build_id}/log,updateSiteBuildLog,update_site_build_log,post,,buildLogMsg,build_log_msg,builds,update_log,exec,,
+builds.yaml,/builds/{build_id}/start,notifyBuildStart,notify_build_start,post,,build,build,builds,notify_start,exec,,
+builds.yaml,/{account_id}/builds/status,getAccountBuildStatus,get_account_build_status,get,,build,build,build_status,get,select,,
+database.yaml,/sites/{site_id}/database,createSiteDatabase,create_site_database,post,,database,database,databases,create,insert,,"Creates a new database for the specified site. If a database already exists, returns the existing connection string. The database region defaults to the site's functions region if not specified."
+database.yaml,/sites/{site_id}/database,getSiteDatabase,get_site_database,get,,database,database,databases,get,select,,Returns the database connection string for the specified site.
+database.yaml,/sites/{site_id}/database,deleteSiteDatabase,delete_site_database,delete,,database,database,databases,delete,delete,,Deletes the database and all associated branches and snapshots for the specified site.
+database.yaml,/sites/{site_id}/database/branch,createSiteDatabaseBranch,create_site_database_branch,post,,database,database,branches,create,insert,,"Creates a new database branch. If a branch already exists for the specified branch ID, returns the existing connection string."
+database.yaml,/sites/{site_id}/database/branches,listSiteDatabaseBranches,list_site_database_branches,get,,database,database,branches,list,select,$.branches,Returns all branches for the site's database with compute status and metadata.
+database.yaml,/sites/{site_id}/database/branch/{branch_id},getSiteDatabaseBranch,get_site_database_branch,get,,database,database,branches,get,select,,Returns the database branch connection string for a specific branch.
+database.yaml,/sites/{site_id}/database/branch/{branch_id},deleteSiteDatabaseBranch,delete_site_database_branch,delete,,database,database,branches,delete,delete,,Deletes a database branch.
+database.yaml,/sites/{site_id}/database/branch/{branch_id}/reset,resetSiteDatabaseBranch,reset_site_database_branch,post,,database,database,branches,reset,exec,,"Resets a non-production database branch by re-forking it from a source branch (defaults to the production branch). If the target branch is already in sync with the source, returns the existing connection string without performing a reset, unless `force=true` is passed. The production branch cannot be reset."
+database.yaml,/sites/{site_id}/database/branch/{branch_id}/compute/settings,setSiteDatabaseBranchComputeSettings,set_site_database_branch_compute_settings,put,,database,database,compute_settings,set_for_branch,replace,,"Sets compute settings for a specific database branch, overriding project-level settings. Requires a Pro or higher plan."
+database.yaml,/sites/{site_id}/database/compute/settings,setSiteDatabaseComputeSettings,set_site_database_compute_settings,put,,database,database,compute_settings,set,replace,,Sets project-level compute settings for the database. Applied to new branches. Can be overridden per-branch. Requires a Pro or higher plan.
+database.yaml,/sites/{site_id}/database/compute/settings,getSiteDatabaseComputeSettings,get_site_database_compute_settings,get,,database,database,compute_settings,get,select,,Returns the project-level compute settings for the database. Returns effective settings (custom or tier defaults). Requires a Pro or higher plan.
+database.yaml,/sites/{site_id}/database/compute/settings,clearSiteDatabaseComputeSettings,clear_site_database_compute_settings,delete,,database,database,compute_settings,clear,delete,,Resets project-level compute settings to tier defaults. Requires a Pro or higher plan.
+database.yaml,/sites/{site_id}/database/migrations,listSiteDatabaseMigrations,list_site_database_migrations,get,,database,database,migrations,list,select,$.migrations,"Returns the list of migrations available for the specified branch, indicating which ones have been applied to the database."
+database.yaml,/sites/{site_id}/database/migrations/{name},getSiteDatabaseMigration,get_site_database_migration,get,,database,database,migrations,get,select,,Returns the contents of a named migration for the specified branch.
+database.yaml,/sites/{site_id}/database/migrations/{deploy_id},runSiteDatabaseMigrations,run_site_database_migrations,post,,database,database,migrations,run,exec,,Runs database migrations for the specified deploy. Finds the deploy and determines the appropriate branch.
+database.yaml,/sites/{site_id}/database/snapshot,createSiteDatabaseSnapshot,create_site_database_snapshot,post,,database,database,snapshots,create,insert,,Creates a point-in-time snapshot of a database branch. Defaults to the production branch if no branch name is specified.
+database.yaml,/sites/{site_id}/database/snapshots,listSiteDatabaseSnapshots,list_site_database_snapshots,get,,database,database,snapshots,list,select,$.snapshots,Returns all snapshots for the site's database.
+database.yaml,/sites/{site_id}/database/snapshot/{snapshot_id},deleteSiteDatabaseSnapshot,delete_site_database_snapshot,delete,,database,database,snapshots,delete,delete,,Deletes a database snapshot.
+database.yaml,/sites/{site_id}/database/snapshot/{snapshot_id}/restore,restoreSiteDatabaseSnapshot,restore_site_database_snapshot,post,,database,database,snapshots,restore,exec,,Restores a snapshot to a database branch. Defaults to the production branch if no branch_name is specified.
+deploys.yaml,/sites/{site_id}/deploys,listSiteDeploys,list_site_deploys,get,,deploy,deploy,deploys,list,select,,
+deploys.yaml,/sites/{site_id}/deploys,createSiteDeploy,create_site_deploy,post,,deploy,deploy,deploys,create,insert,,
+deploys.yaml,/sites/{site_id}/deploys/{deploy_id},getSiteDeploy,get_site_deploy,get,,deploy,deploy,deploys,get,select,,
+deploys.yaml,/sites/{site_id}/deploys/{deploy_id},updateSiteDeploy,update_site_deploy,put,,deploy,deploy,deploys,update,replace,,
+deploys.yaml,/sites/{site_id}/deploys/{deploy_id},deleteSiteDeploy,delete_site_deploy,delete,,deploy,deploy,deploys,delete,delete,,
+deploys.yaml,/deploys/{deploy_id}/cancel,cancelSiteDeploy,cancel_site_deploy,post,,deploy,deploy,deploys,cancel,exec,,
+deploys.yaml,/sites/{site_id}/deploys/{deploy_id}/restore,restoreSiteDeploy,restore_site_deploy,post,,deploy,deploy,deploys,restore,exec,,
+deploys.yaml,/sites/{site_id}/rollback,rollbackSiteDeploy,rollback_site_deploy,put,,deploy,deploy,deploys,rollback,exec,,
+deploys.yaml,/deploys/{deploy_id},getDeploy,get_deploy,get,,deploy,deploy,deploys,get_by_id,select,,
+deploys.yaml,/deploys/{deploy_id},deleteDeploy,delete_deploy,delete,,deploy,deploy,deploys,delete_by_id,delete,,
+deploys.yaml,/deploys/{deploy_id}/validations_report,updateDeployValidations,update_deploy_validations,patch,,deploy,deploy,deploys,update_validations_report,exec,,Updates the deploy validations report for a deploy.
+deploys.yaml,/deploys/{deploy_id}/lock,lockDeploy,lock_deploy,post,,deploy,deploy,deploys,lock,exec,,
+deploys.yaml,/deploys/{deploy_id}/unlock,unlockDeploy,unlock_deploy,post,,deploy,deploy,deploys,unlock,exec,,
+deploys.yaml,/deploys/{deploy_id}/files/{path},uploadDeployFile,upload_deploy_file,put,,file,file,deploys,upload_file,exec,,
+deploys.yaml,/deploys/{deploy_id}/functions/{name},uploadDeployFunction,upload_deploy_function,put,,function,function,deploys,upload_function,exec,,
+deploys.yaml,/deploys/{deploy_id}/edge_functions/{code_sha},uploadDeployEdgeFunction,upload_deploy_edge_function,put,,edgeFunction,edge_function,deploys,upload_edge_function,exec,,
+deploys.yaml,/deploy_keys,listDeployKeys,list_deploy_keys,get,,deployKey,deploy_key,deploy_keys,list,select,,
+deploys.yaml,/deploy_keys,createDeployKey,create_deploy_key,post,,deployKey,deploy_key,deploy_keys,create,insert,,
+deploys.yaml,/deploy_keys/{key_id},getDeployKey,get_deploy_key,get,,deployKey,deploy_key,deploy_keys,get,select,,
+deploys.yaml,/deploy_keys/{key_id},deleteDeployKey,delete_deploy_key,delete,,deployKey,deploy_key,deploy_keys,delete,delete,,
+dev_servers.yaml,/sites/{site_id}/dev_servers,listSiteDevServers,list_site_dev_servers,get,,devServer,dev_server,dev_servers,list,select,,
+dev_servers.yaml,/sites/{site_id}/dev_servers,createSiteDevServer,create_site_dev_server,post,,devServer,dev_server,dev_servers,create,insert,,
+dev_servers.yaml,/sites/{site_id}/dev_servers,deleteSiteDevServers,delete_site_dev_servers,delete,,devServer,dev_server,dev_servers,delete,delete,,
+dev_servers.yaml,/sites/{site_id}/dev_servers/{dev_server_id},getSiteDevServer,get_site_dev_server,get,,devServer,dev_server,dev_servers,get,select,,
+dev_servers.yaml,/sites/{site_id}/dev_servers/{dev_server_id}/activity,markDevServerActivity,mark_dev_server_activity,post,,devServer,dev_server,dev_servers,mark_activity,exec,,
+dev_servers.yaml,/sites/{site_id}/dev_servers/{dev_server_id}/state,updateDevServerState,update_dev_server_state,post,,devServer,dev_server,dev_servers,update_state,exec,,
+dev_servers.yaml,/sites/{site_id}/dev_server_hooks,listSiteDevServerHooks,list_site_dev_server_hooks,get,,devServerHook,dev_server_hook,dev_server_hooks,list,select,,
+dev_servers.yaml,/sites/{site_id}/dev_server_hooks,createSiteDevServerHook,create_site_dev_server_hook,post,,devServerHook,dev_server_hook,dev_server_hooks,create,insert,,
+dev_servers.yaml,/sites/{site_id}/dev_server_hooks/{id},getSiteDevServerHook,get_site_dev_server_hook,get,,devServerHook,dev_server_hook,dev_server_hooks,get,select,,
+dev_servers.yaml,/sites/{site_id}/dev_server_hooks/{id},updateSiteDevServerHook,update_site_dev_server_hook,put,,devServerHook,dev_server_hook,dev_server_hooks,update,replace,,
+dev_servers.yaml,/sites/{site_id}/dev_server_hooks/{id},deleteSiteDevServerHook,delete_site_dev_server_hook,delete,,devServerHook,dev_server_hook,dev_server_hooks,delete,delete,,
+dns.yaml,/dns_zones,createDnsZone,create_dns_zone,post,,dnsZone,dns_zone,dns_zones,create,insert,,
+dns.yaml,/dns_zones,getDnsZones,get_dns_zones,get,,dnsZone,dns_zone,dns_zones,list,select,,
+dns.yaml,/dns_zones/{zone_id},getDnsZone,get_dns_zone,get,,dnsZone,dns_zone,dns_zones,get,select,,
+dns.yaml,/dns_zones/{zone_id},deleteDnsZone,delete_dns_zone,delete,,dnsZone,dns_zone,dns_zones,delete,delete,,
+dns.yaml,/dns_zones/{zone_id}/transfer,transferDnsZone,transfer_dns_zone,put,,dnsZone,dns_zone,dns_zones,transfer,exec,,
+dns.yaml,/dns_zones/{zone_id}/dns_records,getDnsRecords,get_dns_records,get,,dnsZone,dns_zone,dns_records,list,select,,
+dns.yaml,/dns_zones/{zone_id}/dns_records,createDnsRecord,create_dns_record,post,,dnsZone,dns_zone,dns_records,create,insert,,
+dns.yaml,/dns_zones/{zone_id}/dns_records/{dns_record_id},getIndividualDnsRecord,get_individual_dns_record,get,,dnsZone,dns_zone,dns_records,get,select,,
+dns.yaml,/dns_zones/{zone_id}/dns_records/{dns_record_id},deleteDnsRecord,delete_dns_record,delete,,dnsZone,dns_zone,dns_records,delete,delete,,
+env.yaml,/accounts/{account_id}/env,getEnvVars,get_env_vars,get,,environmentVariables,environment_variables,env_vars,list,select,,Returns all environment variables for an account or site. An account corresponds to a team in the Netlify UI.
+env.yaml,/accounts/{account_id}/env,createEnvVars,create_env_vars,post,,environmentVariables,environment_variables,env_vars,create,insert,,Creates new environment variables. Granular scopes are available on Pro plans and above.
+env.yaml,/accounts/{account_id}/env/{key},getEnvVar,get_env_var,get,,environmentVariables,environment_variables,env_vars,get,select,,Returns an individual environment variable.
+env.yaml,/accounts/{account_id}/env/{key},updateEnvVar,update_env_var,put,,environmentVariables,environment_variables,env_vars,update,replace,,Updates an existing environment variable and all of its values. Existing values will be replaced by values provided.
+env.yaml,/accounts/{account_id}/env/{key},setEnvVarValue,set_env_var_value,patch,,environmentVariables,environment_variables,env_vars,set_value,update,,Updates or creates a new value for an existing environment variable.
+env.yaml,/accounts/{account_id}/env/{key},deleteEnvVar,delete_env_var,delete,,environmentVariables,environment_variables,env_vars,delete,delete,,Deletes an environment variable
+env.yaml,/accounts/{account_id}/env/{key}/value/{id},deleteEnvVarValue,delete_env_var_value,delete,,environmentVariables,environment_variables,env_vars,delete_value,delete,,Deletes a specific environment variable value.
+env.yaml,/sites/{site_id}/env,getSiteEnvVars,get_site_env_vars,get,,environmentVariables,environment_variables,env_vars,list_for_site,select,,Returns all environment variables for a site. This convenience method behaves the same as `getEnvVars` but doesn't require an `account_id` as input.
+forms.yaml,/sites/{site_id}/forms,listSiteForms,list_site_forms,get,,form,form,forms,list,select,,
+forms.yaml,/sites/{site_id}/forms/{form_id},deleteSiteForm,delete_site_form,delete,,form,form,forms,delete,delete,,
+forms.yaml,/sites/{site_id}/submissions,listSiteSubmissions,list_site_submissions,get,,submission,submission,submissions,list_for_site,select,,
+forms.yaml,/forms/{form_id}/submissions,listFormSubmissions,list_form_submissions,get,,submission,submission,submissions,list,select,,
+forms.yaml,/submissions/{submission_id},listFormSubmission,list_form_submission,get,,submission,submission,submissions,get,select,,
+forms.yaml,/submissions/{submission_id},deleteSubmission,delete_submission,delete,,submission,submission,submissions,delete,delete,,
+functions.yaml,/sites/{site_id}/functions,searchSiteFunctions,search_site_functions,get,,function,function,functions,list,select,,
+hooks.yaml,/hooks,listHooksBySiteId,list_hooks_by_site_id,get,,hook,hook,hooks,list,select,,
+hooks.yaml,/hooks,createHookBySiteId,create_hook_by_site_id,post,,hook,hook,hooks,create,insert,,
+hooks.yaml,/hooks/{hook_id},getHook,get_hook,get,,hook,hook,hooks,get,select,,
+hooks.yaml,/hooks/{hook_id},updateHook,update_hook,put,,hook,hook,hooks,update,replace,,
+hooks.yaml,/hooks/{hook_id},deleteHook,delete_hook,delete,,hook,hook,hooks,delete,delete,,
+hooks.yaml,/hooks/{hook_id}/enable,enableHook,enable_hook,post,,hook,hook,hooks,enable,exec,,
+hooks.yaml,/hooks/types,listHookTypes,list_hook_types,get,,hookType,hook_type,hook_types,list,select,,
+oauth.yaml,/oauth/tickets,createTicket,create_ticket,post,,ticket,ticket,tickets,create,insert,,
+oauth.yaml,/oauth/tickets/{ticket_id},showTicket,show_ticket,get,,ticket,ticket,tickets,get,select,,
+oauth.yaml,/oauth/tickets/{ticket_id}/exchange,exchangeTicket,exchange_ticket,post,,accessToken,access_token,tickets,exchange,exec,,
+services.yaml,/sites/{site_id}/service-instances,listServiceInstancesForSite,list_service_instances_for_site,get,,serviceInstance,service_instance,service_instances,list,select,,
+services.yaml,/sites/{site_id}/services/{addon}/instances,createServiceInstance,create_service_instance,post,,serviceInstance,service_instance,service_instances,create,insert,,
+services.yaml,/sites/{site_id}/services/{addon}/instances/{instance_id},showServiceInstance,show_service_instance,get,,serviceInstance,service_instance,service_instances,get,select,,
+services.yaml,/sites/{site_id}/services/{addon}/instances/{instance_id},updateServiceInstance,update_service_instance,put,,serviceInstance,service_instance,service_instances,update,replace,,
+services.yaml,/sites/{site_id}/services/{addon}/instances/{instance_id},deleteServiceInstance,delete_service_instance,delete,,serviceInstance,service_instance,service_instances,delete,delete,,
+services.yaml,/services/,getServices,get_services,get,,service,service,services,list,select,,
+services.yaml,/services/{addonName},showService,show_service,get,,service,service,services,get,select,,
+services.yaml,/services/{addonName}/manifest,showServiceManifest,show_service_manifest,get,,service,service,service_manifests,get,select,,
+sites.yaml,/sites,listSites,list_sites,get,,site,site,sites,list,select,,**Note:** Environment variable keys and values have moved from `build_settings.env` and `repo.env` to a new endpoint. Please use [getEnvVars](#tag/environmentVariables/operation/getEnvVars) to retrieve site environment variables.
+sites.yaml,/sites,createSite,create_site,post,,site,site,sites,create,insert,,**Note:** Environment variable keys and values have moved from `build_settings.env` and `repo.env` to a new endpoint. Please use [createEnvVars](#tag/environmentVariables/operation/createEnvVars) to create environment variables for a site.
+sites.yaml,/sites/{site_id},getSite,get_site,get,,site,site,sites,get,select,,**Note:** Environment variable keys and values have moved from `build_settings.env` and `repo.env` to a new endpoint. Please use [getEnvVars](#tag/environmentVariables/operation/getEnvVars) to retrieve site environment variables.
+sites.yaml,/sites/{site_id},updateSite,update_site,patch,,site,site,sites,update,update,,**Note:** Environment variable keys and values have moved from `build_settings.env` and `repo.env` to a new endpoint. Please use [updateEnvVar](#tag/environmentVariables/operation/updateEnvVar) to update a site's environment variables.
+sites.yaml,/sites/{site_id},deleteSite,delete_site,delete,,site,site,sites,delete,delete,,
+sites.yaml,/sites/{site_id}/ssl,provisionSiteTLSCertificate,provision_site_tlscertificate,post,,sniCertificate,sni_certificate,ssl_certificates,provision,insert,,"Provisions or updates a TLS certificate for the site.
+
+**Creating a certificate (site has no certificate):**
+- Omit certificate params to initiate Let's Encrypt provisioning
+- Provide certificate, key, and ca_certificates to upload a custom certificate
+
+**Updating a certificate (site already has a certificate):**
+- REQUIRES certificate, key, and ca_certificates to replace with a new custom certificate
+- Use POST /api/v1/sites/{site_id}/ssl/renew to renew an existing Let's Encrypt certificate"
+sites.yaml,/sites/{site_id}/ssl,showSiteTLSCertificate,show_site_tlscertificate,get,,sniCertificate,sni_certificate,ssl_certificates,get,select,,
+sites.yaml,/sites/{site_id}/ssl/certificates,getAllCertificates,get_all_certificates,get,,sniCertificate,sni_certificate,ssl_certificates,list,select,,
+sites.yaml,/sites/{site_id}/files,listSiteFiles,list_site_files,get,,file,file,site_files,list,select,,
+sites.yaml,/sites/{site_id}/assets,listSiteAssets,list_site_assets,get,,asset,asset,site_assets,list,select,,
+sites.yaml,/sites/{site_id}/assets,createSiteAsset,create_site_asset,post,,asset,asset,site_assets,create,insert,,
+sites.yaml,/sites/{site_id}/assets/{asset_id},getSiteAssetInfo,get_site_asset_info,get,,asset,asset,site_assets,get,select,,
+sites.yaml,/sites/{site_id}/assets/{asset_id},updateSiteAsset,update_site_asset,put,,asset,asset,site_assets,update,replace,,
+sites.yaml,/sites/{site_id}/assets/{asset_id},deleteSiteAsset,delete_site_asset,delete,,asset,asset,site_assets,delete,delete,,
+sites.yaml,/sites/{site_id}/assets/{asset_id}/public_signature,getSiteAssetPublicSignature,get_site_asset_public_signature,get,,assetPublicSignature,asset_public_signature,site_asset_public_signatures,get,select,,
+sites.yaml,/sites/{site_id}/files/{file_path},getSiteFileByPathName,get_site_file_by_path_name,get,,file,file,site_files,get,select,,
+sites.yaml,/purge,purgeCache,purge_cache,post,,purge,purge,sites,purge_cache,exec,,Purges cached content from Netlify's CDN. Supports purging by Cache-Tag.
+sites.yaml,/sites/{site_id}/snippets,listSiteSnippets,list_site_snippets,get,,snippet,snippet,snippets,list,select,,
+sites.yaml,/sites/{site_id}/snippets,createSiteSnippet,create_site_snippet,post,,snippet,snippet,snippets,create,insert,,
+sites.yaml,/sites/{site_id}/snippets/{snippet_id},getSiteSnippet,get_site_snippet,get,,snippet,snippet,snippets,get,select,,
+sites.yaml,/sites/{site_id}/snippets/{snippet_id},updateSiteSnippet,update_site_snippet,put,,snippet,snippet,snippets,update,replace,,
+sites.yaml,/sites/{site_id}/snippets/{snippet_id},deleteSiteSnippet,delete_site_snippet,delete,,snippet,snippet,snippets,delete,delete,,
+sites.yaml,/sites/{site_id}/metadata,getSiteMetadata,get_site_metadata,get,,metadata,metadata,site_metadata,get,select,,
+sites.yaml,/sites/{site_id}/metadata,updateSiteMetadata,update_site_metadata,put,,metadata,metadata,site_metadata,update,replace,,
+sites.yaml,/sites/{site_id}/deployed-branches,listSiteDeployedBranches,list_site_deployed_branches,get,,deployedBranch,deployed_branch,deployed_branches,list,select,,
+sites.yaml,/sites/{site_id}/unlink_repo,unlinkSiteRepo,unlink_site_repo,put,,site,site,sites,unlink_repo,exec,,"[Beta] Unlinks the repo from the site.
+
+This action will also:
+- Delete associated deploy keys
+- Delete outgoing webhooks for the repo
+- Delete the site's build hooks"
+sites.yaml,/sites/{site_id}/enable,enableSite,enable_site,put,,site,site,sites,enable,exec,,Re-enables a site that was previously disabled by the user. Sites that were disabled for usage exceeded or marked as spam cannot be re-enabled via this endpoint.
+sites.yaml,/sites/{site_id}/disable,disableSite,disable_site,put,,site,site,sites,disable,exec,,"Disables a site, preventing it from serving content. The site can be re-enabled later using the enable endpoint."
+sites.yaml,/sites/{site_id}/dns,getDNSForSite,get_dnsfor_site,get,,dnsZone,dns_zone,site_dns,get,select,,
+sites.yaml,/sites/{site_id}/dns,configureDNSForSite,configure_dnsfor_site,put,,dnsZone,dns_zone,site_dns,configure,exec,,
+sites.yaml,/{account_slug}/sites,createSiteInTeam,create_site_in_team,post,,site,site,sites,create_in_team,insert,,**Note:** Environment variable keys and values have moved from `build_settings.env` and `repo.env` to a new endpoint. Please use [createEnvVars](#tag/environmentVariables/operation/createEnvVars) to create environment variables for a site.
+sites.yaml,/{account_slug}/sites,listSitesForAccount,list_sites_for_account,get,,site,site,sites,list_for_account,select,,**Note:** Environment variable keys and values have moved from `build_settings.env` and `repo.env` to a new endpoint. Please use [getEnvVars](#tag/environmentVariables/operation/getEnvVars) to retrieve site environment variables.
+split_tests.yaml,/sites/{site_id}/traffic_splits,createSplitTest,create_split_test,post,,splitTest,split_test,split_tests,create,insert,,
+split_tests.yaml,/sites/{site_id}/traffic_splits,getSplitTests,get_split_tests,get,,splitTest,split_test,split_tests,list,select,,
+split_tests.yaml,/sites/{site_id}/traffic_splits/{split_test_id},updateSplitTest,update_split_test,put,,splitTest,split_test,split_tests,update,replace,,
+split_tests.yaml,/sites/{site_id}/traffic_splits/{split_test_id},getSplitTest,get_split_test,get,,splitTest,split_test,split_tests,get,select,,
+split_tests.yaml,/sites/{site_id}/traffic_splits/{split_test_id}/publish,enableSplitTest,enable_split_test,post,,splitTest,split_test,split_tests,publish,exec,,
+split_tests.yaml,/sites/{site_id}/traffic_splits/{split_test_id}/unpublish,disableSplitTest,disable_split_test,post,,splitTest,split_test,split_tests,unpublish,exec,,
+users.yaml,/user,getCurrentUser,get_current_user,get,,user,user,users,get_current,select,,

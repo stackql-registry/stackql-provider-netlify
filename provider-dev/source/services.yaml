@@ -1,0 +1,486 @@
+openapi: 3.0.0
+info:
+  title: services API
+  description: netlify services API
+  version: 2.57.0
+paths:
+  /sites/{site_id}/service-instances:
+    get:
+      operationId: listServiceInstancesForSite
+      tags:
+        - serviceInstance
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    url:
+                      type: string
+                    config:
+                      type: string
+                      description: (opaque JSON object)
+                    external_attributes:
+                      type: string
+                      description: (opaque JSON object)
+                    service_slug:
+                      type: string
+                    service_path:
+                      type: string
+                    service_name:
+                      type: string
+                    env:
+                      type: string
+                      description: (opaque JSON object)
+                    snippets:
+                      type: array
+                      items:
+                        type: string
+                        description: (opaque JSON object)
+                    auth_url:
+                      type: string
+                    created_at:
+                      type: string
+                      format: dateTime
+                    updated_at:
+                      type: string
+                      format: dateTime
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+      parameters:
+        - name: site_id
+          in: path
+          required: true
+          schema:
+            type: string
+  /sites/{site_id}/services/{addon}/instances:
+    post:
+      operationId: createServiceInstance
+      tags:
+        - serviceInstance
+      requestBody:
+        $ref: '#/components/requestBodies/updateSiteMetadataMetadata'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  url:
+                    type: string
+                  config:
+                    type: string
+                    description: (opaque JSON object)
+                  external_attributes:
+                    type: string
+                    description: (opaque JSON object)
+                  service_slug:
+                    type: string
+                  service_path:
+                    type: string
+                  service_name:
+                    type: string
+                  env:
+                    type: string
+                    description: (opaque JSON object)
+                  snippets:
+                    type: array
+                    items:
+                      type: string
+                      description: (opaque JSON object)
+                  auth_url:
+                    type: string
+                  created_at:
+                    type: string
+                    format: dateTime
+                  updated_at:
+                    type: string
+                    format: dateTime
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+      parameters:
+        - name: site_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: addon
+          in: path
+          required: true
+          schema:
+            type: string
+  /sites/{site_id}/services/{addon}/instances/{instance_id}:
+    get:
+      operationId: showServiceInstance
+      tags:
+        - serviceInstance
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  url:
+                    type: string
+                  config:
+                    type: string
+                    description: (opaque JSON object)
+                  external_attributes:
+                    type: string
+                    description: (opaque JSON object)
+                  service_slug:
+                    type: string
+                  service_path:
+                    type: string
+                  service_name:
+                    type: string
+                  env:
+                    type: string
+                    description: (opaque JSON object)
+                  snippets:
+                    type: array
+                    items:
+                      type: string
+                      description: (opaque JSON object)
+                  auth_url:
+                    type: string
+                  created_at:
+                    type: string
+                    format: dateTime
+                  updated_at:
+                    type: string
+                    format: dateTime
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+      parameters:
+        - name: site_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: addon
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: instance_id
+          in: path
+          required: true
+          schema:
+            type: string
+    put:
+      operationId: updateServiceInstance
+      tags:
+        - serviceInstance
+      requestBody:
+        $ref: '#/components/requestBodies/updateSiteMetadataMetadata'
+      responses:
+        '204':
+          description: No Content
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+      parameters:
+        - name: site_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: addon
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: instance_id
+          in: path
+          required: true
+          schema:
+            type: string
+    delete:
+      operationId: deleteServiceInstance
+      tags:
+        - serviceInstance
+      responses:
+        '204':
+          description: Deleted
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+      parameters:
+        - name: site_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: addon
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: instance_id
+          in: path
+          required: true
+          schema:
+            type: string
+  /services/:
+    get:
+      operationId: getServices
+      tags:
+        - service
+      responses:
+        '200':
+          description: services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    slug:
+                      type: string
+                    service_path:
+                      type: string
+                    long_description:
+                      type: string
+                    description:
+                      type: string
+                    events:
+                      type: array
+                      items:
+                        type: string
+                        description: (opaque JSON object)
+                    tags:
+                      type: array
+                      items:
+                        type: string
+                    icon:
+                      type: string
+                    manifest_url:
+                      type: string
+                    environments:
+                      type: array
+                      items:
+                        type: string
+                    created_at:
+                      type: string
+                      format: dateTime
+                    updated_at:
+                      type: string
+                      format: dateTime
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+  /services/{addonName}:
+    get:
+      operationId: showService
+      tags:
+        - service
+      responses:
+        '200':
+          description: services
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  slug:
+                    type: string
+                  service_path:
+                    type: string
+                  long_description:
+                    type: string
+                  description:
+                    type: string
+                  events:
+                    type: array
+                    items:
+                      type: string
+                      description: (opaque JSON object)
+                  tags:
+                    type: array
+                    items:
+                      type: string
+                  icon:
+                    type: string
+                  manifest_url:
+                    type: string
+                  environments:
+                    type: array
+                    items:
+                      type: string
+                  created_at:
+                    type: string
+                    format: dateTime
+                  updated_at:
+                    type: string
+                    format: dateTime
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+      parameters:
+        - name: addonName
+          in: path
+          required: true
+          schema:
+            type: string
+  /services/{addonName}/manifest:
+    get:
+      operationId: showServiceManifest
+      tags:
+        - service
+      responses:
+        '201':
+          description: retrieving from provider
+          content:
+            application/json:
+              schema:
+                type: string
+                description: (opaque JSON object)
+        default:
+          description: error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  code:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+                    nullable: false
+      parameters:
+        - name: addonName
+          in: path
+          required: true
+          schema:
+            type: string
+components:
+  requestBodies:
+    updateSiteMetadataMetadata:
+      content:
+        application/json:
+          schema:
+            type: string
+            description: (opaque JSON object)
+      required: true
+  schemas: {}
+servers:
+  - url: https://api.netlify.com/api/v1

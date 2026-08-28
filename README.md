@@ -1,259 +1,159 @@
-I'll create a README for a Netlify provider for StackQL, following the same structure as the previous examples.
-
 # `netlify` provider for [`stackql`](https://github.com/stackql/stackql)
 
-This repository is used to generate and document the `netlify` provider for StackQL, allowing you to query and manipulate Netlify resources using SQL-like syntax. The provider is built using the `@stackql/provider-utils` package, which provides tools for converting OpenAPI specifications into StackQL-compatible provider schemas.
+This repository generates and documents the `netlify` provider for StackQL, which lets you query and manage Netlify sites, deploys, builds, environment variables, DNS, forms, functions, teams and more with SQL. The provider is built from Netlify's published API description using [`@stackql/provider-utils`](https://www.npmjs.com/package/@stackql/provider-utils).
+
+- Provider docs: [netlify-provider.stackql.io](https://netlify-provider.stackql.io)
+- Upstream spec: [open-api.netlify.com/swagger.json](https://open-api.netlify.com/swagger.json) (Swagger 2.0, converted to OpenAPI 3.0 during the build)
 
 ## Prerequisites
 
-To use the Netlify provider with StackQL, you'll need:
+- Node.js 20 or later, npm, and yarn (for the docs site)
+- GNU make and a POSIX shell (Linux, macOS or WSL - the server lifecycle scripts use `pgrep`/`ps`)
+- Python 3.10 or later (live smoke tests)
+- A Netlify personal access token for live queries and smoke tests
 
-1. A Netlify account with appropriate API credentials
-2. Netlify personal access token with sufficient permissions for the resources you want to access
-3. StackQL CLI installed on your system (see [StackQL](https://github.com/stackql/stackql))
-
-## 1. Download the Open API Specification
-
-First, download the Netlify API OpenAPI specification:
+## Quick start
 
 ```bash
-rm -rf provider-dev/downloaded/*
-curl -L https://open-api.netlify.com/swagger.json \
--o provider-dev/downloaded/openapi.json
+npm install
+make all          # spec -> preprocess -> split -> normalize -> mappings -> provider -> meta-test -> docs -> docs-build
+make smoke-test   # live queries against api.netlify.com (needs .env, see below)
 ```
 
-## 2. Split into Service Specs
+`make help` lists every target. The stages are described below and can be run individually.
 
-Next, split the monolithic OpenAPI specification into service-specific files:
+## Build pipeline
+
+| Target | What it does |
+|--------|--------------|
+| `make spec` | Downloads the latest Swagger document to `provider-dev/downloaded/swagger.json`. Set `SPEC_REFRESH=0` to build from the committed copy. |
+| `make preprocess` | `provider-dev/scripts/preprocess.mjs` converts Swagger 2.0 to OpenAPI 3.0 (`swagger2openapi`), fixes the upstream path that repeats the `/api/v1` base path and drops the three `x-internal` build-plugin operations, writing `provider-dev/downloaded/openapi.json`. |
+| `make split` | Splits the spec into 17 per-service yamls under `provider-dev/source/` using the operationId -> service map in `provider-dev/scripts/svc-discriminator.mjs` (fails on an unknown operation). |
+| `make normalize` | Runs the provider-utils normalizer (allOf flattening, path-item parameter lifting, opaque object lowering) and then `post_normalize.mjs`, which reverts the bare-array envelope the normalizer wraps around Netlify's 41 array-returning list endpoints - stackql iterates bare arrays natively. |
+| `make mappings` | Regenerates `provider-dev/config/all_services.csv`. `analyze` preserves existing rows; `provider-dev/scripts/map_operations.mjs` fills in operations added upstream from its mapping table, prunes retired operations, resyncs moved paths and reports rows that disagree with the table. The target fails if any operation is unmapped. |
+| `make provider` | Generates the provider under `provider-dev/openapi/src/netlify/v00.00.00000/` from the CSV with `servers.json`, `provider_config.json` (bearer auth) and `service_config.json` (Link-header pagination), then runs `post_process.mjs` for the request/response transforms the generator cannot express (see below). |
+| `make build` | `preprocess` + `split` + `normalize` + `mappings` + `provider`. |
+| `make meta-test` | Starts a local `stackql srv` against the generated provider, walks every `SHOW SERVICES` / `SHOW RESOURCES` / `SHOW METHODS` / `DESCRIBE EXTENDED` route and stops the server. No credentials needed; a non-zero exit stops `make all`. |
+| `make docs` | Generates the Docusaurus markdown into `website/docs/` from the provider plus `provider-dev/docgen/provider-data/headerContent{1,2}.txt`, then runs `website/scripts/sanitize-docs.mjs` (MDX escaping). |
+| `make docs-build` / `make docs-serve` | `yarn build` / `yarn start` in `website/` (the shared `stackql/docusaurus-config` is vendored on `prebuild`). |
+| `make smoke-test` | Live smoke suite (see [Testing](#testing)). `MODE=exec` (default), `pgwire` or `both`; `LIVE=1` targets the published provider. |
+| `make clean` | Removes the generated provider, split source, website build and the downloaded test binary. |
+
+Manual decisions live in scripts, not in hand edits of generated files, so a refresh is a reviewed diff: rerun `make build`, review the changes to `all_services.csv` and `provider-dev/openapi/`, and add mappings for anything `make split` or `make mappings` reports as unmapped. `all_services.csv` is checked in as the durable record of which operation backs which resource and method; renaming a resource or moving an operation between resources is a breaking change for users and needs a note in `NOTES.md`.
+
+## Authentication
+
+The provider uses a bearer token read from `NETLIFY_API_TOKEN`, the same variable the official Netlify Terraform provider uses:
 
 ```bash
-rm -rf provider-dev/source/*
-npm run split -- \
-  --provider-name netlify \
-  --api-doc provider-dev/downloaded/openapi.json \
-  --svc-discriminator path \
-  --output-dir provider-dev/source \
-  --overwrite \
-  --svc-name-overrides "$(cat <<EOF
-{
-  "sites": "sites",
-  "deploys": "deploys",
-  "builds": "builds",
-  "functions": "functions",
-  "dns": "dns",
-  "forms": "forms",
-  "hooks": "hooks",
-  "submissions": "forms",
-  "files": "files",
-  "accounts": "accounts",
-  "users": "users",
-  "teams": "teams",
-  "members": "teams",
-  "plugins": "plugins",
-  "services": "services",
-  "service_instances": "services",
-  "split_tests": "split_tests",
-  "snippets": "snippets",
-  "ssl": "ssl",
-  "assets": "assets",
-  "domains": "domains"
-}
+export NETLIFY_API_TOKEN=<your-personal-access-token>
+```
+
+Create a token under **User settings > Applications > Personal access tokens** in the Netlify app. To use a different variable name (for example the Netlify CLI's `NETLIFY_AUTH_TOKEN`):
+
+```bash
+stackql shell --auth='{"netlify":{"type":"bearer","credentialsenvvar":"NETLIFY_AUTH_TOKEN"}}'
+```
+
+## Pagination and pushdown
+
+- **Pagination** is declared on every service via `x-stackQL-config.pagination` (from `provider-dev/config/service_config.json`): the response token is the `Link` header's `rel="next"` URL and the request token replaces the whole request URL, so multi-page listings are traversed automatically up to stackql's `--http.response.pageLimit` (default 20 pages).
+- **Predicate pushdown** works through operation parameters: any `WHERE` column that matches a declared path or query parameter (`site_id`, `account_id`, `state`, `branch`, `name`, `filter`, `context_name`, `scope`, `page`, `per_page`, ...) is sent to the API rather than filtered locally. Other columns are filtered by the SQL engine after the rows are fetched.
+- `LIMIT` is not pushed to `per_page`; use `per_page` in the `WHERE` clause to control page size.
+
+## Design notes
+
+- **Services by API area.** Netlify's 35 tags are regrouped into `sites`, `deploys`, `builds`, `env`, `dns`, `functions`, `forms`, `hooks`, `accounts`, `users`, `oauth`, `services`, `split_tests`, `dev_servers`, `agent_runners`, `ai_gateway` and `database`.
+- **Every resource is selectable.** Lifecycle operations are `EXEC` methods on the resource they act on (`sites.enable`, `deploys.lock`, `deploys.rollback`, `sites.purge_cache`, `split_tests.publish`, `dns_zones.transfer`, ...). `SHOW METHODS IN netlify.deploys.deploys` lists them with their parameters.
+- **Verbs.** PATCH is `UPDATE`, PUT is `REPLACE`, POST is `INSERT`. Request body fields are plain columns (no `data__` prefix).
+- **Transforms** (`provider-dev/scripts/post_process.mjs`): the env var create endpoint takes a JSON array (column `env_vars`); site metadata and add-on instance config take opaque objects (`metadata`, `config`); the three deploy upload methods take a raw body (`file_body`); the opaque `site_metadata` and `service_manifests` responses are wrapped under one JSON column; and the env var `values` field is exposed as `env_values` because `values` is a SQL keyword the parser rejects even when quoted.
+- **No team default from the environment.** Terraform's `default_team_slug` has no equivalent - any-sdk resolves `x-stackQL-envVar` only on server variables and Netlify's host is fixed - so `account_slug` / `account_id` are supplied per query.
+
+`NOTES.md` records the evidence behind each of these.
+
+## Testing
+
+### Meta-route gate (no credentials)
+
+```bash
+make meta-test
+```
+
+### Live smoke tests
+
+`provider-dev/test/` holds a pytest suite driven by `tier1.yaml`: reads across the main resources, a pagination check, an environment variable lifecycle (`INSERT` -> `SELECT` -> `UPDATE` -> `REPLACE` -> `DELETE`) on the test site and one `EXEC` (cache purge). Nothing billable is created; Netlify's API is free to call. The same suite runs through `stackql exec` and through a `stackql srv` Postgres-wire session.
+
+```bash
+cat > .env <<'EOF'
+NETLIFY_API_TOKEN=<your-personal-access-token>
 EOF
-)"
+
+make smoke-test             # local build, exec mode
+make smoke-test MODE=both   # exec + pgwire
+make smoke-test LIVE=1      # the published provider from the public registry
 ```
 
-## 3. Generate Mappings
+The target downloads a Linux `stackql` into `provider-dev/test/.bin/` and creates a venv on first run. The test team and site are overridable with `TEST_ACCOUNT_SLUG` and `TEST_SITE_NAME` (defaults in `provider-dev/test/provider.yaml`); ids are resolved by query at session start. See `provider-dev/test/README.md` for the YAML shape and how to add cases.
 
-Generate the mapping configuration that connects OpenAPI operations to StackQL resources:
-
-```bash
-npm run generate-mappings -- \
-  --provider-name netlify \
-  --input-dir provider-dev/source \
-  --output-dir provider-dev/config
-```
-
-Update the resultant `provider-dev/config/all_services.csv` to add the `stackql_resource_name`, `stackql_method_name`, `stackql_verb` values for each operation.
-
-## 4. Generate Provider
-
-This step transforms the split OpenAPI service specs into a fully-functional StackQL provider by applying the resource and method mappings defined in your CSV file.
-
-```bash
-rm -rf provider-dev/openapi/*
-npm run generate-provider -- \
-  --provider-name netlify \
-  --input-dir provider-dev/source \
-  --output-dir provider-dev/openapi/src/netlify \
-  --config-path provider-dev/config/all_services.csv \
-  --servers '[{"url": "https://api.netlify.com/api/v1"}]' \
-  --provider-config '{"auth": { "type": "bearer", "credentialsenvvar": "NETLIFY_ACCESS_TOKEN" }}' \
-  --overwrite
-```
-```bash
-sh provider-dev/scripts/fix_broken_links.sh
-```
-
-## 5. Test Provider
-
-### Starting the StackQL Server
-
-Before running tests, start a StackQL server with your provider:
-
-```bash
-PROVIDER_REGISTRY_ROOT_DIR="$(pwd)/provider-dev/openapi"
-npm run start-server -- --provider netlify --registry $PROVIDER_REGISTRY_ROOT_DIR
-```
-
-### Test Meta Routes
-
-Test all metadata routes (services, resources, methods) in the provider:
-
-```bash
-npm run test-meta-routes -- netlify --verbose
-```
-
-When you're done testing, stop the StackQL server:
-
-```bash
-npm run stop-server
-```
-
-Use this command to view the server status:
-
-```bash
-npm run server-status
-```
-
-### Run test queries
-
-Run some test queries against the provider using the `stackql shell`:
+### Ad hoc queries
 
 ```bash
 PROVIDER_REGISTRY_ROOT_DIR="$(pwd)/provider-dev/openapi"
 REG_STR='{"url": "file://'${PROVIDER_REGISTRY_ROOT_DIR}'", "localDocRoot": "'${PROVIDER_REGISTRY_ROOT_DIR}'", "verifyConfig": {"nopVerify": true}}'
-./stackql shell --registry="${REG_STR}"
+stackql shell --registry="${REG_STR}"
 ```
-
-Example queries to try:
 
 ```sql
--- List all sites
-SELECT 
-id,
-name,
-url,
-ssl_url,
-admin_url,
-screenshot_url,
-created_at,
-updated_at
-FROM netlify.sites.list;
+SELECT id, name, url, account_slug, state
+FROM netlify.sites.sites;
 
--- View recent deploys
-SELECT
-id,
-site_id,
-name,
-url,
-state,
-branch,
-commit_ref,
-created_at,
-published_at
-FROM netlify.deploys.list
-WHERE site_id = 'your-site-id';
+SELECT id, state, branch, context, published_at
+FROM netlify.deploys.deploys
+WHERE site_id = '<site-id>' AND state = 'ready';
 
--- Check DNS records
-SELECT
-hostname,
-type,
-ttl,
-value
-FROM netlify.dns.list
-WHERE zone_id = 'your-zone-id';
-
--- List functions
-SELECT
-name,
-function_name,
-runtime,
-url
-FROM netlify.functions.list
-WHERE site_id = 'your-site-id';
-
--- View form submissions
-SELECT
-id,
-form_id,
-site_id,
-created_at,
-data
-FROM netlify.forms.submissions
-WHERE form_id = 'your-form-id';
+SELECT key, scopes, env_values
+FROM netlify.env.env_vars
+WHERE account_id = '<team-id>' AND site_id = '<site-id>';
 ```
 
-## 6. Publish the provider
+More examples, including DNS across every zone, deploy success rates and the mutation grammar, are in the [provider docs](https://netlify-provider.stackql.io) (source: `provider-dev/docgen/provider-data/headerContent2.txt`).
 
-To publish the provider push the `netlify` dir to `providers/src` in a feature branch of the [`stackql-provider-registry`](https://github.com/stackql/stackql-provider-registry). Follow the [registry release flow](https://github.com/stackql/stackql-provider-registry/blob/dev/docs/build-and-deployment.md).  
+## Publishing the provider
 
-Launch the StackQL shell:
+Push the `provider-dev/openapi/src/netlify` directory to `providers/src` in a feature branch of [`stackql-provider-registry`](https://github.com/stackql/stackql-provider-registry) and follow the [registry release flow](https://github.com/stackql/stackql-provider-registry/blob/dev/docs/build-and-deployment.md). To verify the dev registry build:
 
 ```bash
 export DEV_REG="{ \"url\": \"https://registry-dev.stackql.app/providers\" }"
-./stackql --registry="${DEV_REG}" shell
+stackql --registry="${DEV_REG}" shell
 ```
-
-Pull the latest dev `netlify` provider:
 
 ```sql
 registry pull netlify;
 ```
 
-Run some test queries to verify the provider works as expected.
+Once the provider reaches the public registry, `make smoke-test LIVE=1` runs the same smoke suite against it.
 
-## 7. Generate web docs
+## Publishing the docs
 
-Provider doc microsites are built using Docusaurus and published using GitHub Pages.  
+`make docs` regenerates `website/docs/`; commit the regenerated tree. Doc pages show a "Last updated" date taken from git history (`showLastUpdateTime` in `website/docusaurus.config.js`), so pages carry the date of the commit that last regenerated them. Pushes to `main` that touch `website/**` deploy to GitHub Pages via `.github/workflows/prod-web-deploy.yml`; the custom domain is `netlify-provider.stackql.io` (CNAME to `stackql.github.io`).
 
-a. Update `headerContent1.txt` and `headerContent2.txt` accordingly in `provider-dev/docgen/provider-data/`  
+## Repository layout
 
-b. Update the following in `website/docusaurus.config.js`:  
-
-```js
-// Provider configuration - change these for different providers
-const providerName = "netlify";
-const providerTitle = "Netlify Provider";
 ```
-
-c. Then generate docs using...
-
-```bash
-npm run generate-docs -- \
-  --provider-name netlify \
-  --provider-dir ./provider-dev/openapi/src/netlify/v00.00.00000 \
-  --output-dir ./website \
-  --provider-data-dir ./provider-dev/docgen/provider-data
-```  
-
-## 8. Test web docs locally
-
-```bash
-cd website
-# test build
-yarn build
-
-# run local dev server
-yarn start
+Makefile                         build / test / docs targets
+bin/                             server lifecycle scripts, meta-route test
+provider-dev/
+  downloaded/                    swagger.json (upstream) + openapi.json (preprocessed)
+  source/                        split + normalized per-service specs (generated)
+  config/                        all_services.csv mappings, servers / auth / pagination json
+  scripts/                       preprocess, svc-discriminator, post_normalize, map_operations, post_process
+  openapi/src/netlify/           generated provider (publish this)
+  docgen/provider-data/          headerContent1.txt / headerContent2.txt for the docs index page
+  test/                          pytest smoke tests
+website/                         Docusaurus microsite
+CLAUDE.md                        working conventions for the build
+NOTES.md                         engineering notes and evidence
 ```
-
-## 9. Publish web docs to GitHub Pages
-
-Under __Pages__ in the repository, in the __Build and deployment__ section select __GitHub Actions__ as the __Source__. In Netlify DNS create the following records:
-
-| Source Domain | Record Type  | Target |
-|---------------|--------------|--------|
-| netlify-provider.stackql.io | CNAME | stackql.github.io. |
 
 ## License
 
@@ -261,4 +161,4 @@ MIT
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome. Please open a pull request.

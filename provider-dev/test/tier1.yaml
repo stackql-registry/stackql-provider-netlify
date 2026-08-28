@@ -1,0 +1,286 @@
+# Tier 1 smoke tests: the queries and mutations a user would expect to "just
+# work" against a freshly built (or freshly published) netlify provider.
+#
+# Each entry has:
+#   name           - test id (used in pytest output)
+#   sql            - SQL to execute. ${VAR} is substituted from env / defaults /
+#                    provider.yaml:derived_env (ids resolved at session start).
+#   assertions:
+#     min_rows         - result set must have at least this many rows (default 1)
+#     required_columns - every named column must be present on every row
+#     row_predicates   - list of Python expressions evaluated with `rows` and `r`
+#                        (r = rows[0]) in scope. Allowed builtins: all, any, len,
+#                        int, float, str, bool, isinstance, abs, min, max, sum,
+#                        range, sorted, set, list, dict, tuple. All must be truthy.
+#   xfail (optional)   - flag known provider/binary bugs without losing visibility:
+#     reason: "..."        (required; printed in pytest output)
+#     modes: [pgwire]      (optional; if omitted, xfails in all modes)
+#
+# Cost: zero. Every statement is a read except the environment variable
+# lifecycle near the end, which creates and deletes a single variable on the
+# test site (nothing billable, no deploy is triggered), and the cache purge
+# EXEC (free). Cases run in file order, so the lifecycle's delete always
+# follows its insert.
+#
+# Keep this list small (~25 cases). The goal is "is the provider broken?",
+# not exhaustive coverage.
+
+# --- identity and teams --------------------------------------------------
+
+- name: current_user
+  sql: SELECT id, email, full_name, site_count FROM netlify.users.users
+  assertions:
+    min_rows: 1
+    required_columns: [id, email, full_name]
+    row_predicates:
+      - "isinstance(r['email'], str) and '@' in r['email']"
+
+- name: list_accounts
+  sql: SELECT id, name, slug, type_name FROM netlify.accounts.accounts
+  assertions:
+    min_rows: 1
+    required_columns: [id, name, slug, type_name]
+    row_predicates:
+      - "any(row['slug'] == '${TEST_ACCOUNT_SLUG}' for row in rows)"
+
+- name: list_members
+  sql: |
+    SELECT id, email, role
+    FROM netlify.accounts.members
+    WHERE account_slug = '${TEST_ACCOUNT_SLUG}'
+  assertions:
+    min_rows: 1
+    required_columns: [id, email, role]
+
+# --- sites ---------------------------------------------------------------
+
+- name: list_sites
+  sql: SELECT id, name, url, account_slug, state FROM netlify.sites.sites
+  assertions:
+    min_rows: 1
+    required_columns: [id, name, url, account_slug, state]
+    row_predicates:
+      - "any(row['name'] == '${TEST_SITE_NAME}' for row in rows)"
+
+- name: list_sites_for_account_with_name_pushdown
+  sql: |
+    SELECT id, name, url
+    FROM netlify.sites.sites
+    WHERE account_slug = '${TEST_ACCOUNT_SLUG}' AND name = '${TEST_SITE_NAME}'
+  assertions:
+    min_rows: 1
+    row_predicates:
+      - "all(row['name'] == '${TEST_SITE_NAME}' for row in rows)"
+
+- name: get_site_by_id
+  sql: |
+    SELECT id, name, plan, ssl, custom_domain, build_settings
+    FROM netlify.sites.sites
+    WHERE site_id = '${TEST_SITE_ID}'
+  assertions:
+    min_rows: 1
+    required_columns: [id, name, plan, build_settings]
+    row_predicates:
+      - "r['name'] == '${TEST_SITE_NAME}'"
+  xfail:
+    modes: [pgwire]
+    reason: >-
+      stackql pgwire path materialises the result into a cache table that
+      lacks the request-parameter column (site_id) - works in exec mode.
+      Upstream stackql binary bug - track and remove this xfail once fixed.
+
+- name: site_ssl_certificate
+  sql: |
+    SELECT domains, state, expires_at
+    FROM netlify.sites.ssl_certificates
+    WHERE site_id = '${TEST_SITE_ID}'
+  assertions:
+    min_rows: 1
+    required_columns: [domains, state, expires_at]
+
+- name: site_metadata_transform
+  sql: |
+    SELECT metadata
+    FROM netlify.sites.site_metadata
+    WHERE site_id = '${TEST_SITE_ID}'
+  assertions:
+    min_rows: 1
+    required_columns: [metadata]
+
+# --- deploys and builds --------------------------------------------------
+
+- name: list_deploys_with_state_pushdown
+  sql: |
+    SELECT id, state, branch, context, created_at
+    FROM netlify.deploys.deploys
+    WHERE site_id = '${TEST_SITE_ID}' AND state = 'ready'
+  assertions:
+    min_rows: 1
+    required_columns: [id, state, branch, context, created_at]
+    row_predicates:
+      - "all(row['state'] == 'ready' for row in rows)"
+
+- name: get_deploy_by_id
+  sql: |
+    SELECT id, state, site_id
+    FROM netlify.deploys.deploys
+    WHERE deploy_id = '${TEST_DEPLOY_ID}'
+  assertions:
+    min_rows: 1
+    row_predicates:
+      - "r['id'] == '${TEST_DEPLOY_ID}' and r['site_id'] == '${TEST_SITE_ID}'"
+  xfail:
+    modes: [pgwire]
+    reason: >-
+      stackql pgwire path materialises the result into a cache table that
+      lacks the request-parameter column (deploy_id) - works in exec mode.
+      Upstream stackql binary bug - track and remove this xfail once fixed.
+
+- name: list_builds
+  sql: |
+    SELECT id, deploy_id, done, error, created_at
+    FROM netlify.builds.builds
+    WHERE site_id = '${TEST_SITE_ID}'
+  assertions:
+    min_rows: 1
+    required_columns: [id, deploy_id, done, created_at]
+
+- name: list_build_hooks
+  sql: |
+    SELECT id, title, branch, url
+    FROM netlify.builds.build_hooks
+    WHERE site_id = '${TEST_SITE_ID}'
+  assertions:
+    min_rows: 0
+    required_columns: [id, title, branch, url]
+
+# --- pagination ----------------------------------------------------------
+
+# per_page=1 forces one row per page; the Link header rel="next" traversal
+# must bring back every site, so the count matches the unpaged listing.
+- name: pagination_follows_link_header
+  sql: |
+    SELECT 'paged' AS kind, count(*) AS n FROM netlify.sites.sites WHERE per_page = 1
+    UNION ALL
+    SELECT 'unpaged' AS kind, count(*) AS n FROM netlify.sites.sites
+  assertions:
+    min_rows: 2
+    row_predicates:
+      - "int(rows[0]['n']) == int(rows[1]['n']) and int(rows[0]['n']) >= 1"
+
+# --- dns -----------------------------------------------------------------
+
+- name: list_dns_zones
+  sql: SELECT id, name, account_slug, dns_servers FROM netlify.dns.dns_zones
+  assertions:
+    min_rows: 1
+    required_columns: [id, name, account_slug]
+
+- name: list_dns_records
+  sql: |
+    SELECT hostname, type, value, ttl
+    FROM netlify.dns.dns_records
+    WHERE zone_id = '${TEST_DNS_ZONE_ID}'
+  assertions:
+    min_rows: 1
+    required_columns: [hostname, type, value]
+
+# --- misc reads ----------------------------------------------------------
+
+- name: list_hook_types
+  sql: SELECT name, fields FROM netlify.hooks.hook_types
+  assertions:
+    min_rows: 1
+    required_columns: [name]
+
+- name: list_addon_services
+  sql: SELECT name, slug FROM netlify.services.services
+  assertions:
+    min_rows: 1
+    required_columns: [name, slug]
+
+- name: list_env_vars_for_site
+  sql: |
+    SELECT key, scopes, is_secret, env_values
+    FROM netlify.env.env_vars
+    WHERE account_id = '${TEST_ACCOUNT_ID}' AND site_id = '${TEST_SITE_ID}'
+  assertions:
+    min_rows: 0
+    required_columns: [key, scopes, is_secret, env_values]
+
+# --- write lifecycle: environment variable ---------------------------------
+# INSERT (array body via the request transform) -> SELECT -> UPDATE (PATCH a
+# context value) -> REPLACE (PUT the whole variable, `env_values` -> wire
+# `values`) -> SELECT via json_each -> DELETE -> SELECT gone.
+# Mutations return no rows; min_rows: 0 keeps them as "must not error".
+
+- name: env_var_insert
+  sql: |
+    INSERT INTO netlify.env.env_vars (account_id, site_id, env_vars)
+    SELECT '${TEST_ACCOUNT_ID}', '${TEST_SITE_ID}',
+      '[{"key": "${TEST_ENV_KEY}", "values": [{"value": "one", "context": "all"}]}]'
+  assertions:
+    min_rows: 0
+
+- name: env_var_select_after_insert
+  sql: |
+    SELECT key, scopes, is_secret, env_values
+    FROM netlify.env.env_vars
+    WHERE account_id = '${TEST_ACCOUNT_ID}' AND site_id = '${TEST_SITE_ID}' AND key = '${TEST_ENV_KEY}'
+  assertions:
+    min_rows: 1
+    row_predicates:
+      - "r['key'] == '${TEST_ENV_KEY}'"
+      - "'one' in str(r['env_values'])"
+
+- name: env_var_set_value_update
+  sql: |
+    UPDATE netlify.env.env_vars
+    SET context = 'production', value = 'two'
+    WHERE account_id = '${TEST_ACCOUNT_ID}' AND site_id = '${TEST_SITE_ID}' AND key = '${TEST_ENV_KEY}'
+  assertions:
+    min_rows: 0
+
+- name: env_var_replace
+  sql: |
+    REPLACE netlify.env.env_vars
+    SET env_key = '${TEST_ENV_KEY}', env_values = '[{"value": "three", "context": "all"}]'
+    WHERE account_id = '${TEST_ACCOUNT_ID}' AND site_id = '${TEST_SITE_ID}' AND key = '${TEST_ENV_KEY}'
+  assertions:
+    min_rows: 0
+
+- name: env_var_values_via_json_each
+  sql: |
+    SELECT e.key, json_extract(v.value, '$.value') AS val, json_extract(v.value, '$.context') AS ctx
+    FROM netlify.env.env_vars e, json_each(e.env_values) v
+    WHERE e.account_id = '${TEST_ACCOUNT_ID}' AND e.site_id = '${TEST_SITE_ID}' AND e.key = '${TEST_ENV_KEY}'
+  assertions:
+    min_rows: 1
+    required_columns: [key, val, ctx]
+    row_predicates:
+      - "r['val'] == 'three'"
+
+- name: env_var_delete
+  sql: |
+    DELETE FROM netlify.env.env_vars
+    WHERE account_id = '${TEST_ACCOUNT_ID}' AND site_id = '${TEST_SITE_ID}' AND key = '${TEST_ENV_KEY}'
+  assertions:
+    min_rows: 0
+
+- name: env_var_gone_after_delete
+  sql: |
+    SELECT key
+    FROM netlify.env.env_vars
+    WHERE account_id = '${TEST_ACCOUNT_ID}' AND site_id = '${TEST_SITE_ID}'
+  assertions:
+    min_rows: 0
+    row_predicates:
+      - "all(row['key'] != '${TEST_ENV_KEY}' for row in rows)"
+
+# --- lifecycle op via EXEC ---------------------------------------------------
+
+- name: exec_purge_cache
+  sql: |
+    EXEC netlify.sites.sites.purge_cache @@json = '{"site_id": "${TEST_SITE_ID}"}'
+  assertions:
+    min_rows: 0
