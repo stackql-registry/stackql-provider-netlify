@@ -73,7 +73,11 @@ For Claude Desktop (`claude_desktop_config.json`) or any client configured with 
 
 The agent can then discover and query Netlify using the server's tools (`list_resources`, `describe_resource`, `run_select_query` and so on). Credential values are resolved inside the server process and are never visible to the agent.
 
-## Sites
+## Example Queries
+
+Try the following queries using `stackql shell`, or run them from a script or CI pipeline with `stackql exec`.
+
+### Sites
 
 Every site the token can see, with the team it belongs to:
 
@@ -120,7 +124,7 @@ FROM netlify.sites.ssl_certificates
 WHERE site_id = '1798369c-fb66-438b-b80d-a19ce1698772';
 ```
 
-## Deploys and builds
+### Deploys and builds
 
 Deploys are listed per site. Netlify paginates with a `Link` header and the provider follows it automatically, so a listing returns every page; `state`, `branch`, `production` and `per_page` are sent to the API when supplied:
 
@@ -165,7 +169,7 @@ FROM netlify.builds.build_hooks
 WHERE site_id = '1798369c-fb66-438b-b80d-a19ce1698772';
 ```
 
-## Environment variables
+### Environment variables
 
 Environment variables are scoped to a team (`account_id`) and optionally a site. The context values come back in the `env_values` column (the API field is `values`, renamed because it is a SQL keyword):
 
@@ -189,7 +193,7 @@ AND e.site_id = '1798369c-fb66-438b-b80d-a19ce1698772'
 ORDER BY e.key, context;
 ```
 
-## DNS
+### DNS
 
 Zones managed by Netlify DNS and the records in one of them:
 
@@ -211,7 +215,7 @@ JOIN netlify.dns.dns_records r ON r.zone_id = z.id
 ORDER BY zone, r.hostname;
 ```
 
-## Teams, members and audit
+### Teams, members and audit
 
 ```sql
 SELECT id, name, slug, type_name
@@ -226,7 +230,7 @@ FROM netlify.accounts.audit_events
 WHERE account_id = '60612a0f5d5dcb19a6e9a8ab';
 ```
 
-## Forms, functions and hooks
+### Forms, functions and hooks
 
 ```sql
 SELECT id, name, submission_count
@@ -246,7 +250,7 @@ FROM netlify.hooks.hooks
 WHERE site_id = '1798369c-fb66-438b-b80d-a19ce1698772';
 ```
 
-## Provision, mutate and tear down
+### Provision, mutate and tear down
 
 Mutations use the same SQL grammar: `INSERT` creates, `UPDATE` sends a PATCH, `REPLACE` sends a PUT, `EXEC` invokes lifecycle methods and `DELETE` removes. Request body fields are supplied as columns using their API names.
 
