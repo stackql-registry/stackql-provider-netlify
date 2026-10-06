@@ -26,6 +26,7 @@ Query, provision and operate Netlify using SQL - sites and their build, domain a
 
 total services: __17__  
 total resources: __62__  
+source project: __[stackql-provider-netlify](https://github.com/stackql-registry/stackql-provider-netlify)__  
 
 :::
 

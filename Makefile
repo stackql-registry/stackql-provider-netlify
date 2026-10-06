@@ -50,6 +50,7 @@
 SHELL := /bin/bash
 
 PROVIDER      := netlify
+SOURCE_PROJECT ?= https://github.com/stackql-registry/stackql-provider-$(PROVIDER)
 VERSION       := v00.00.00000
 SPEC_URL      := https://open-api.netlify.com/swagger.json
 SPEC_FILE     := provider-dev/downloaded/swagger.json
@@ -170,7 +171,8 @@ docs:
 	  --provider-name $(PROVIDER) \
 	  --provider-dir ./$(PROVIDER_DIR) \
 	  --output-dir ./$(WEBSITE_DIR) \
-	  --provider-data-dir ./provider-dev/docgen/provider-data
+	  --provider-data-dir ./provider-dev/docgen/provider-data \
+	  --source-project $(SOURCE_PROJECT)
 	node $(WEBSITE_DIR)/scripts/sanitize-docs.mjs
 
 docs-build:
